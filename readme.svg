@@ -78,7 +78,7 @@ text, tspan {white-space: pre;}
 
 
 <text x="380" y="30" fill="#c9d1d9">
-<tspan x="380" y="30">aayush@patel</tspan> -———————————————————————————————————————————-—-
+<tspan x="380" y="30">Hardik0332</tspan> -———————————————————————————————————————————-—-
 <tspan x="380" y="50" class="cc">. </tspan><tspan class="key">OS</tspan>:<tspan class="cc"> ............................... </tspan><tspan class="value">Windows 11, Android 14</tspan>
 <tspan x="380" y="70" class="cc">. </tspan><tspan class="key">Uptime</tspan>:<tspan class="cc" id="age_data_dots"> ...................... </tspan><tspan class="value" id="age_data">19 years, 8 months, 19 days</tspan>
 <tspan x="380" y="90" class="cc">. </tspan><tspan class="key">Host</tspan>:<tspan class="cc"> ......................................... </tspan><tspan class="value">Mumbai, IN</tspan>
@@ -95,8 +95,8 @@ text, tspan {white-space: pre;}
 <tspan x="380" y="310" class="cc">. </tspan>
 <tspan x="380" y="330" class="cc">. </tspan><tspan class="key">Tools</tspan>/<tspan class="key">IDEs</tspan>:<tspan class="cc"> ........... </tspan>
 <tspan x="380" y="370">- Contact</tspan> -——————————————————————————————————————————————-—-
-<tspan x="380" y="390" class="cc">. </tspan><tspan class="key">LinkedIn</tspan>:<tspan class="cc"> ................................. </tspan><a href="https://www.linkedin.com/in/aayush-patel09" target="_blank"><tspan class="value">aayush-patel09</tspan></a>
-<tspan x="380" y="410" class="cc">. </tspan><tspan class="key">Discord</tspan>:<tspan class="cc"> ........................................ </tspan><tspan class="value">neo999in</tspan>
+<tspan x="380" y="390" class="cc">. </tspan><tspan class="key">LinkedIn</tspan>:<tspan class="cc"> ................................. </tspan><a href="https://www.linkedin.com/in/Hardik0332" target="_blank"><tspan class="value">Hardik0332</tspan></a>
+<tspan x="380" y="410" class="cc">. </tspan><tspan class="key">Discord</tspan>:<tspan class="cc"> ........................................ </tspan><tspan class="value">Hardik0332</tspan>
 <tspan x="380" y="450">- GitHub Stats</tspan> -—————————————————————————————————————————-—-
 <tspan x="380" y="470" class="cc">. </tspan><tspan class="key">Repos</tspan>:<tspan class="cc" id="repo_data_dots"> ...... </tspan><tspan class="value" id="repo_data">3</tspan> {<tspan class="key">Contributed</tspan>: <tspan class="value" id="contrib_data">7</tspan>} | <tspan class="key">Stars</tspan>:<tspan class="cc" id="star_data_dots"> ............. </tspan><tspan class="value" id="star_data">2</tspan>
 <tspan x="380" y="490" class="cc">. </tspan><tspan class="key">Commmits</tspan>:<tspan class="cc" id="commit_data_dots"> .................... </tspan><tspan class="value" id="commit_data">93</tspan> | <tspan class="key">Followers</tspan>:<tspan class="cc" id="follower_data_dots"> ......... </tspan><tspan class="value" id="follower_data">6</tspan>
