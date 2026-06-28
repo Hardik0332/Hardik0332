@@ -19,7 +19,7 @@ SVG_FILES = ("readme.svg",)  # only one SVG target
 
 # Fixed values that shape the generated README content.
 COMMENT_BLOCK_SIZE = 7
-BIRTHDAY = datetime.datetime(2006, 10, 9)  
+BIRTHDAY = datetime.datetime(2006, 5, 31)  
 CACHE_COMMENT_LINE = "This line is a comment block. Write whatever you want here.\n"
 
 # Visual widths used when inserting dot padding in the SVG text fields.
