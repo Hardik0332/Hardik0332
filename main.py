@@ -195,7 +195,6 @@ def graph_repos_stars(count_type, owner_affiliation):
 
 
 # Traverse commit history for one repository, 100 commits at a time, until there are no more pages.
-# The cache lists are passed through so partial results can still be saved if a request fails midway.
 def recursive_loc(
     owner,
     repo_name,
