@@ -5,38 +5,87 @@ on:
       - main
   schedule:
     - cron: "0 21 * * *"
+  workflow_dispatch:
 permissions:
   contents: write
+
+# Only one README build at a time, so two runs can never race on the same push.
+concurrency:
+  group: readme-build
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
       - name: Get Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Install dependencies
         run: pip install requests python-dateutil lxml python-dotenv
 
+      # Fail here with a readable message instead of letting main.py die on a
+      # Python traceback when the personal access token is missing or expired.
+      - name: Verify ACCESS_TOKEN
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error title=ACCESS_TOKEN secret is not set::Create a token at https://github.com/settings/tokens (classic, scopes: repo + read:user) and add it as the ACCESS_TOKEN secret under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          status=$(curl -sS -D headers.txt -o /dev/null -w '%{http_code}' \
+            -H "authorization: token $ACCESS_TOKEN" \
+            https://api.github.com/user)
+
+          if [ "$status" = "401" ]; then
+            echo "::error title=ACCESS_TOKEN is expired or revoked::GitHub returned 401 Bad credentials. Generate a new token at https://github.com/settings/tokens (classic, scopes: repo + read:user) and update the ACCESS_TOKEN secret."
+            exit 1
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error title=ACCESS_TOKEN check failed::GitHub returned HTTP $status for /user. If this is 403, the token is missing the repo / read:user scopes."
+            exit 1
+          fi
+
+          # Warn ahead of time so the daily build does not break silently again.
+          expires=$(sed -n 's/^[Gg]it[Hh]ub-[Aa]uthentication-[Tt]oken-[Ee]xpiration: *//p' headers.txt | tr -d '\r')
+          if [ -n "$expires" ]; then
+            expires_epoch=$(date -d "$expires" +%s 2>/dev/null || echo "")
+            if [ -n "$expires_epoch" ]; then
+              days_left=$(( (expires_epoch - $(date +%s)) / 86400 ))
+              echo "ACCESS_TOKEN expires on $expires ($days_left days left)."
+              if [ "$days_left" -le 14 ]; then
+                echo "::warning title=ACCESS_TOKEN expires soon::Only $days_left day(s) left. Rotate the token before $expires or the daily build will start failing."
+              fi
+            fi
+          else
+            echo "ACCESS_TOKEN has no expiry date."
+          fi
+          rm -f headers.txt
+
       - name: Update README file
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          USER_NAME: ${{ secrets.USER_NAME }}
+          # Fall back to the repository owner if the USER_NAME secret is unset.
+          USER_NAME: ${{ secrets.USER_NAME || github.repository_owner }}
         run: python main.py
 
       - name: Commit
         run: |
           git config --global user.email "hardik0332@gmail.com"
           git config --global user.name "Hardik0332"
-          git add .
-          git commit -m "Updated README" || echo "No changes to commit"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Updated README"
           git push
-
-
-

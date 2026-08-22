@@ -52,7 +52,12 @@ def require_env(name):
     value = os.getenv(name)
     if value:
         return value
-    raise RuntimeError(f"Missing required environment variable: {name}")
+    raise RuntimeError(
+        f"Missing required environment variable: {name}. "
+        "In GitHub Actions this comes from the repository secret of the same "
+        "name (Settings > Secrets and variables > Actions); locally it comes "
+        "from a .env file."
+    )
 
 
 # Build the authorization header and target GitHub username used by all later API calls.
@@ -88,9 +93,28 @@ def format_plural(value):
 
 # Turn an HTTP error into a readable exception that includes the current query counters.
 def raise_request_error(operation_name, response):
-    if response.status_code == 403:
+    # An expired or revoked personal access token is the most common failure here,
+    # so name it explicitly instead of dumping a bare status code.
+    if response.status_code == 401:
         raise RuntimeError(
-            "Too many requests in a short amount of time. GitHub returned 403."
+            "GitHub rejected ACCESS_TOKEN with 401 Bad credentials. The token is "
+            "expired, revoked, or malformed. Generate a new personal access token "
+            "at https://github.com/settings/tokens (classic, scopes: repo + "
+            "read:user) and update the ACCESS_TOKEN secret."
+        )
+    if response.status_code == 403:
+        rate_limited = (
+            response.headers.get("x-ratelimit-remaining") == "0"
+            or "rate limit" in response.text.lower()
+        )
+        if rate_limited:
+            raise RuntimeError(
+                "Too many requests in a short amount of time. GitHub returned 403 "
+                f"(rate limit). Query counts: {QUERY_COUNT}"
+            )
+        raise RuntimeError(
+            f"GitHub returned 403 for {operation_name}: {response.text}. The token "
+            "is most likely missing the required scopes (repo, read:user)."
         )
     raise RuntimeError(
         f"{operation_name} failed with status {response.status_code}: "
@@ -385,7 +409,15 @@ def cache_builder(edges, comment_size, force_cache, loc_add=0, loc_del=0):
     for index, edge in enumerate(edges):
         repository_name = edge["node"]["nameWithOwner"]
         expected_hash = hashlib.sha256(repository_name.encode("utf-8")).hexdigest()
-        stored_hash, stored_commit_count, *_ = cache_rows[index].split()
+
+        # A row can be malformed if a previous run was interrupted mid-write, so
+        # treat anything unparseable as an empty row instead of failing the build.
+        fields = cache_rows[index].split()
+        if len(fields) != 5:
+            cached = False
+            cache_rows[index] = f"{expected_hash} 0 0 0 0\n"
+            fields = cache_rows[index].split()
+        stored_hash, stored_commit_count = fields[0], fields[1]
 
         # If the row no longer matches the current repository at this index, reset it from scratch.
         if stored_hash != expected_hash:
@@ -589,7 +621,11 @@ def commit_counter(comment_size):
     with filename.open("r") as handle:
         data = handle.readlines()
     for line in data[comment_size:]:
-        total_commits += int(line.split()[2])
+        fields = line.split()
+
+        # Skip anything that is not a complete cache row (e.g. a trailing blank line).
+        if len(fields) == 5:
+            total_commits += int(fields[2])
     return total_commits
 
 
